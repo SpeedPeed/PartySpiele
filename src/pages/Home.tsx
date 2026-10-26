@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui';
 import { CATEGORIES, GAMES, type Category } from '../games/registry';
-import { ONLINE_GAMES } from '../online/games';
+import { ONLINE_META } from '../online/meta';
 import { useStore } from '../lib/store';
 import { sfx } from '../lib/sound';
 
@@ -63,7 +63,7 @@ export default function Home() {
 
         <div className="tiles">
           {showOnline &&
-            ONLINE_GAMES.map((g) => (
+            ONLINE_META.map((g) => (
               <button
                 key={'o-' + g.id}
                 className="tile"

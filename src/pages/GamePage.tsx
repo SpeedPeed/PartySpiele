@@ -26,7 +26,7 @@ export default function GamePage() {
         <Suspense fallback={<div className="screen centered center pulse">LOADING…</div>}>
           <Comp />
         </Suspense>
-        {game.category !== 'tools' && <SipLogger />}
+        {game.category !== 'tools' && game.id !== 'turnier' && <SipLogger />}
       </NeedPlayers>
       <Modal open={rules} onClose={() => setRules(false)} title="So geht’s">
         {game.rules.map((r, i) => (

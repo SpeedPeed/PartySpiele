@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { WAHRHEIT } from '../data/wahrheit';
 import { PFLICHT } from '../data/pflicht';
 import { useCountdown, useDeck, useFill, usePrompts } from '../lib/hooks';
@@ -30,7 +31,9 @@ export default function WahrheitPflicht() {
   const { players, settings, addStat } = useStore();
 
   const [mode, setMode] = useState<'reihum' | 'zufall'>('reihum');
-  const [idx, setIdx] = useState(0);
+  // Flaschendrehen can hand over a player and a choice.
+  const handover = useLocation().state as { playerId?: string; choice?: Kind } | null;
+  const [idx, setIdx] = useState(() => Math.max(0, players.findIndex((p) => p.id === handover?.playerId)));
   const [shown, setShown] = useState<Shown | null>(null);
   const [rolling, setRolling] = useState<Kind | null>(null);
   const [result, setResult] = useState<null | 'done' | 'refused'>(null);
@@ -69,6 +72,14 @@ export default function WahrheitPflicht() {
     if (kind === 'pflicht') sfx.powerup();
     else sfx.card();
   };
+
+  const handedOver = useRef(false);
+  useEffect(() => {
+    if (handedOver.current || !handover?.choice) return;
+    handedOver.current = true;
+    choose(handover.choice);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const zufall = () => {
     if (rolling) return;
