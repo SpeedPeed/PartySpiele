@@ -87,8 +87,8 @@ export default function WerBinIch() {
   const cat = WER_BIN_ICH.find((c) => c.id === catId);
   const pool = useMemo(() => (cat ? cat.words : WER_BIN_ICH.flatMap((c) => c.words)), [cat]);
 
-  const live = useRef({ phase, word, flash });
-  live.current = { phase, word, flash };
+  const live = useRef({ phase, word, flash, tilt });
+  live.current = { phase, word, flash, tilt };
 
   const nextWord = useCallback(() => {
     const d = getDeck('werbinich-' + catId, pool);
@@ -150,10 +150,12 @@ export default function WerBinIch() {
 
   // Kippen per Lagesensor
   useEffect(() => {
-    if (phase !== 'play' || tilt === 'off') return;
+    // Auch ohne erteilte Erlaubnis lauschen – kommen keine Events, bleibt einfach das Tippen.
+    if (phase !== 'play') return;
     let armed = false;
     const on = (e: DeviceOrientationEvent) => {
       if (e.beta == null || e.gamma == null) return;
+      if (live.current.tilt !== 'on') setTilt('on');
       const b = (e.beta * Math.PI) / 180;
       const g = (e.gamma * Math.PI) / 180;
       // z-Komponente des "Oben"-Vektors im Gerät: >0 Bildschirm zeigt nach oben, <0 nach unten
@@ -173,7 +175,7 @@ export default function WerBinIch() {
     };
     window.addEventListener('deviceorientation', on);
     return () => window.removeEventListener('deviceorientation', on);
-  }, [phase, tilt, mark]);
+  }, [phase, mark]);
 
   useEffect(() => () => exitFullscreen(), []);
 

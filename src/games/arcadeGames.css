@@ -46,7 +46,7 @@
   position: fixed; inset: 0; z-index: 250;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
   padding: 24px; text-align: center;
-  background: radial-gradient(circle, rgba(255, 46, 136, .55), rgba(11, 6, 32, .96) 70%);
+  background: radial-gradient(circle, rgba(110, 16, 64, .97), rgba(11, 6, 32, .98) 70%);
   animation: fade .2s;
 }
 .ga-finale .ga-title { font-size: 34px; animation: gaPop .6s cubic-bezier(.2, 1.6, .4, 1), wobble 1.6s ease-in-out .6s infinite; }

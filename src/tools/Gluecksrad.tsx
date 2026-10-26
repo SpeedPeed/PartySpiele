@@ -23,7 +23,7 @@ const STRAFEN: Field[] = [
   { label: '{s:2}', text: 'Du trinkst {s:2}. Prost!', emoji: '🍺' },
   { label: '{s:3}', text: 'Autsch – {s:3} für dich!', emoji: '🍻' },
   { label: 'EX!', text: 'EX! {ex}. Na servas!', emoji: '💀' },
-  { label: 'Verteil {s:3}', text: 'Verteil {s:3} – an wen du willst, du Glückspilz.', emoji: '🎁' },
+  { label: 'Verteil 3', text: 'Verteil {s:3} – an wen du willst, du Glückspilz.', emoji: '🎁' },
   { label: 'Wasserpause', text: 'Wasserpause! 💧 Ein Glas Wasser für dich – deine Leber sagt Danke.', emoji: '💧' },
   { label: 'Joker', text: 'JOKER! 🃏 Du darfst eine zukünftige Strafe einmal abwehren.', emoji: '🃏' },
   { label: 'Alle trinken', text: 'Alle trinken {s:1}! Prost, Leute!', emoji: '🍻' },
@@ -158,7 +158,7 @@ export default function Gluecksrad() {
 
   const longest = Math.max(...fields.map((f) => f.label.length), 1);
   const fs = longest > 12 ? 6 : longest > 9 ? 7 : 8;
-  const cut = (s: string) => (s.length > 15 ? s.slice(0, 14) + '…' : s);
+  const cut = (s: string) => (s.length > 13 ? s.slice(0, 12) + '…' : s);
 
   return (
     <div className="screen">
