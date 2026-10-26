@@ -158,7 +158,7 @@ function redrawAll(ctx: CanvasRenderingContext2D, strokes: Stroke[]) {
 
 const r3 = (n: number) => Math.round(Math.min(1, Math.max(0, n)) * 1000) / 1000;
 
-function DrawCanvas({ stream, turnId, canDraw }: { stream: Stream; turnId: string; canDraw: boolean }) {
+function DrawCanvas({ stream, turnId, canDraw, reload = true }: { stream: Stream; turnId: string; canDraw: boolean; reload?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [color, setColor] = useState(COLORS[0]);
   const [size, setSize] = useState(1);
@@ -370,7 +370,7 @@ function DrawCanvas({ stream, turnId, canDraw }: { stream: Stream; turnId: strin
           </div>
         </>
       ) : (
-        <Button small color="ghost" onClick={() => stream.send('mm-sync-req', { k: keyRef.current })}>
+        reload && <Button small color="ghost" onClick={() => stream.send('mm-sync-req', { k: keyRef.current })}>
           🔄 Bild neu laden
         </Button>
       )}
@@ -539,7 +539,7 @@ function View({ state: s, me, isHost, players, send, fill, stream }: OnlineViewP
       <div className="center muted small">Der Begriff war</div>
       <BigTitle>{s.word || s.choices[0]}</BigTitle>
       {s.aborted && <div className="notice center">Der Zeichner ist abgehauen! 🏃 Runde abgebrochen.</div>}
-      <DrawCanvas stream={stream} turnId={s.turnId} canDraw={false} />
+      <DrawCanvas stream={stream} turnId={s.turnId} canDraw={false} reload={false} />
       <Panel>
         {s.guessed.length > 0 ? (
           <div className="col" style={{ gap: 6 }}>
