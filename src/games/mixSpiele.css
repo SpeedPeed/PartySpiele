@@ -1,0 +1,136 @@
+/* Zusatz-Styles für Gaudi-Mix, Wahrheit/Pflicht, Paranoia, Entweder-Oder,
+   Heißer Stuhl, Reaktions-Duell, Zungenbrecher, Hausregeln. */
+
+/* ---------- Allgemein ---------- */
+.gx-kicker-row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.gx-progress { height: 10px; background: var(--panel2); box-shadow: 0 0 0 3px var(--shadow); overflow: hidden; }
+.gx-progress > div { height: 100%; background: linear-gradient(90deg, var(--pink), var(--yellow)); transition: width .3s; }
+.gx-stamp {
+  font-family: var(--pixel); font-size: 12px; padding: 8px 10px; text-align: center;
+  box-shadow: 0 0 0 3px var(--shadow); animation: gxStamp .35s cubic-bezier(.2,1.6,.4,1);
+}
+.gx-stamp.ok { background: #062a10; color: var(--green); }
+.gx-stamp.bad { background: #3a0010; color: var(--red); }
+@keyframes gxStamp { from { transform: scale(2.2) rotate(-8deg); opacity: 0; } to { transform: rotate(-2deg); opacity: 1; } }
+.gx-pop { animation: gxPop .4s cubic-bezier(.2,1.6,.4,1); }
+@keyframes gxPop { from { transform: scale(.3); opacity: 0; } }
+.gx-blink { animation: blink 1s steps(1) infinite; }
+.gx-hint { font-family: var(--pixel); font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 1px; }
+
+/* ---------- Gaudi-Mix: aktive Regeln ---------- */
+.gx-rules { position: sticky; bottom: 0; z-index: 40; margin: 4px; background: var(--panel); box-shadow: 0 0 0 4px var(--shadow), 0 -6px 18px rgba(0,0,0,.5); }
+.gx-rules-head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 12px 74px 12px 12px; background: none; border: none; cursor: pointer; color: var(--yellow);
+  font-family: var(--pixel); font-size: 10px; text-align: left;
+}
+.gx-rules-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; max-height: 40vh; overflow-y: auto; }
+.gx-rule { padding: 8px 10px; background: var(--panel2); box-shadow: inset 4px 0 0 var(--rc, var(--yellow)); font-size: 20px; }
+.gx-bonus-card { background: repeating-linear-gradient(135deg, #2a1666 0 14px, #34197c 14px 28px) !important; }
+.gx-end-card { background: linear-gradient(160deg, #0d3a3a, var(--panel)) !important; }
+
+/* ---------- Wahrheit / Pflicht ---------- */
+.gx-tod { display: flex; flex-direction: column; gap: 12px; }
+.gx-tod .btn.big { min-height: 96px; font-size: 18px; }
+.gx-meter { height: 12px; background: var(--panel2); box-shadow: 0 0 0 2px var(--shadow); overflow: hidden; flex: 1; }
+.gx-meter > div { height: 100%; background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); transition: width .3s; }
+.gx-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; }
+.gx-hero .name { font-family: var(--pixel); font-size: 18px; color: var(--yellow); text-shadow: 3px 3px 0 var(--pink); text-align: center; }
+.gx-timer-num { font-family: var(--pixel); font-size: 36px; color: var(--yellow); text-align: center; text-shadow: 3px 3px 0 var(--pink); }
+
+/* ---------- Paranoia: Münze ---------- */
+.gx-coin-stage { perspective: 800px; height: 230px; display: grid; place-items: center; }
+.gx-coin { position: relative; width: 150px; height: 150px; transform-style: preserve-3d; }
+.gx-coin.flip { animation: gxCoin 2s cubic-bezier(.3,.1,.2,1) forwards; }
+.gx-coin .face {
+  position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  font-family: var(--pixel); font-size: 13px; color: #2a1600;
+  background: radial-gradient(circle at 35% 30%, #fff6a8, var(--yellow) 45%, #c9a200 100%);
+  box-shadow: 0 0 0 6px #8a6d00, 0 0 0 10px var(--shadow), 0 0 30px rgba(255,224,58,.5);
+}
+.gx-coin .face span { display: block; font-size: 52px; line-height: 1; margin-bottom: 4px; text-align: center; }
+.gx-coin .face.back { transform: rotateY(180deg); }
+@keyframes gxCoin {
+  0% { transform: translateY(0) rotateY(0); }
+  45% { transform: translateY(-90px) rotateY(calc(var(--end) * .55deg)); }
+  100% { transform: translateY(0) rotateY(calc(var(--end) * 1deg)); }
+}
+
+/* ---------- Entweder / Oder ---------- */
+.gx-eo { display: flex; flex-direction: column; gap: 0; position: relative; }
+.gx-opt {
+  min-height: 150px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  text-align: center; font-size: 30px; line-height: 1.1; color: #fff; margin: 6px 4px;
+  animation: cardIn .35s cubic-bezier(.2,1.4,.4,1);
+}
+.gx-opt .lbl { font-family: var(--pixel); font-size: 22px; opacity: .85; }
+.gx-opt.a { background: linear-gradient(160deg, #ff2e88, #9c0f50); box-shadow: 0 0 0 4px var(--shadow), 0 0 28px rgba(255,46,136,.55); }
+.gx-opt.b { background: linear-gradient(160deg, #19e3ff, #0a6f8a); color: #04131c; box-shadow: 0 0 0 4px var(--shadow), 0 0 28px rgba(25,227,255,.5); }
+.gx-opt.win { outline: 4px dashed var(--yellow); outline-offset: -10px; }
+.gx-or {
+  align-self: center; margin: -22px 0; z-index: 2; padding: 10px 14px; font-family: var(--pixel); font-size: 14px;
+  background: var(--yellow); color: #2a1600; box-shadow: 0 0 0 4px var(--shadow); animation: wobble 1.6s ease-in-out infinite;
+}
+.gx-count {
+  position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: rgba(5,2,15,.75);
+  font-family: var(--pixel); font-size: 120px; color: var(--yellow); text-shadow: 8px 8px 0 var(--pink);
+}
+.gx-count > div { animation: gxPop .5s cubic-bezier(.2,1.6,.4,1); }
+.gx-stepper { display: flex; align-items: center; gap: 6px; }
+.gx-stepper .v { font-family: var(--pixel); font-size: 22px; min-width: 44px; text-align: center; }
+
+/* ---------- Heißer Stuhl ---------- */
+.gx-clock { font-family: var(--pixel); font-size: 44px; text-align: center; color: var(--yellow); text-shadow: 4px 4px 0 var(--red); }
+.gx-clock.crit { color: var(--red); text-shadow: 4px 4px 0 var(--shadow); animation: pulse .5s infinite; }
+.gx-fire { font-size: 54px; text-align: center; animation: wobble 1s ease-in-out infinite; }
+
+/* ---------- Reaktions-Duell ---------- */
+.gx-rx { position: fixed; inset: 0; z-index: 160; display: grid; gap: 4px; background: var(--shadow); touch-action: none; user-select: none; -webkit-user-select: none; }
+.gx-rx.n2 { grid-template-rows: 1fr 1fr; }
+.gx-rx.n3, .gx-rx.n4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.gx-rx.n3 .gx-zone:nth-child(3) { grid-column: 1 / span 2; }
+.gx-zone {
+  --zc: var(--pink);
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  text-align: center; padding: 10px; touch-action: none; cursor: pointer; overflow: hidden;
+  background: var(--bg2); box-shadow: inset 0 0 0 6px var(--zc); transition: background .08s;
+}
+.gx-zone.flip > .gx-zin { transform: rotate(180deg); }
+.gx-zin { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.gx-zone .zn { font-family: var(--pixel); font-size: 14px; color: var(--zc); }
+.gx-zone .zt { font-family: var(--pixel); font-size: 20px; color: #fff; }
+.gx-zone .zs { font-size: 24px; }
+.gx-rx.wait .gx-zone { background: #6a0010; }
+.gx-rx.go .gx-zone { background: #0e7a2a; }
+.gx-zone.ready { background: #241056; }
+.gx-zone.done { background: #0b3a18 !important; }
+.gx-zone.foul { background: #3a0010 !important; animation: shake .4s; }
+.gx-zone.best { box-shadow: inset 0 0 0 10px var(--yellow); }
+.gx-rx-center {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 170;
+  width: min(86vw, 360px); background: var(--bg2); padding: 14px; text-align: center;
+  box-shadow: 0 0 0 4px var(--shadow), 0 0 0 8px var(--yellow), 0 0 40px rgba(0,0,0,.8);
+  animation: gxPop .3s cubic-bezier(.2,1.6,.4,1);
+}
+.gx-rx-quit {
+  position: fixed; z-index: 170; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 52px; height: 52px; border: none; background: var(--panel); color: var(--ink); font-size: 22px;
+  box-shadow: 0 0 0 3px var(--shadow); cursor: pointer;
+}
+.gx-rx-banner { font-family: var(--pixel); font-size: 22px; color: #fff; text-shadow: 3px 3px 0 var(--shadow); }
+
+/* ---------- Hausregeln: Slotmaschine ---------- */
+.gx-slot {
+  position: relative; min-height: 170px; padding: 22px 18px; display: grid; place-items: center; text-align: center;
+  background: #0a0420; font-size: 28px; line-height: 1.15;
+  box-shadow: inset 0 10px 18px rgba(0,0,0,.8), inset 0 -10px 18px rgba(0,0,0,.8), 0 0 0 4px var(--shadow), 0 0 0 10px var(--yellow), 0 0 0 14px var(--shadow);
+  margin: 14px 12px;
+  overflow: hidden;
+}
+.gx-slot.spin > div { filter: blur(1px); animation: gxSlot .08s linear infinite; color: var(--muted); }
+.gx-slot.hit > div { animation: gxPop .45s cubic-bezier(.2,1.6,.4,1); color: var(--yellow); }
+@keyframes gxSlot { from { transform: translateY(-14px); } to { transform: translateY(14px); } }
+.gx-slot-lights { display: flex; justify-content: space-between; padding: 0 16px; }
+.gx-slot-lights span { width: 12px; height: 12px; background: var(--pink); box-shadow: 0 0 10px var(--pink); animation: blink .5s steps(1) infinite; }
+.gx-slot-lights span:nth-child(even) { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation-delay: .25s; }
