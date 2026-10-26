@@ -18,13 +18,13 @@
 .gx-hint { font-family: var(--pixel); font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 1px; }
 
 /* ---------- Gaudi-Mix: aktive Regeln ---------- */
-.gx-rules { position: sticky; bottom: 0; z-index: 40; margin: 4px; background: var(--panel); box-shadow: 0 0 0 4px var(--shadow), 0 -6px 18px rgba(0,0,0,.5); }
+.gx-rules { margin: 4px 80px 18px 4px; background: var(--panel); box-shadow: 0 0 0 4px var(--shadow), 0 -6px 18px rgba(0,0,0,.5); }
 .gx-rules-head {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 12px 74px 12px 12px; background: none; border: none; cursor: pointer; color: var(--yellow);
+  padding: 14px 12px; background: none; border: none; cursor: pointer; color: var(--yellow);
   font-family: var(--pixel); font-size: 10px; text-align: left;
 }
-.gx-rules-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; max-height: 40vh; overflow-y: auto; }
+.gx-rules-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px;  }
 .gx-rule { padding: 8px 10px; background: var(--panel2); box-shadow: inset 4px 0 0 var(--rc, var(--yellow)); font-size: 20px; }
 .gx-bonus-card { background: repeating-linear-gradient(135deg, #2a1666 0 14px, #34197c 14px 28px) !important; }
 .gx-end-card { background: linear-gradient(160deg, #0d3a3a, var(--panel)) !important; }
@@ -39,7 +39,7 @@
 .gx-timer-num { font-family: var(--pixel); font-size: 36px; color: var(--yellow); text-align: center; text-shadow: 3px 3px 0 var(--pink); }
 
 /* ---------- Paranoia: Münze ---------- */
-.gx-coin-stage { perspective: 800px; height: 230px; display: grid; place-items: center; }
+.gx-coin-stage { perspective: 800px; height: 280px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 16px; }
 .gx-coin { position: relative; width: 150px; height: 150px; transform-style: preserve-3d; }
 .gx-coin.flip { animation: gxCoin 2s cubic-bezier(.3,.1,.2,1) forwards; }
 .gx-coin .face {
@@ -65,8 +65,8 @@
   animation: cardIn .35s cubic-bezier(.2,1.4,.4,1);
 }
 .gx-opt .lbl { font-family: var(--pixel); font-size: 22px; opacity: .85; }
-.gx-opt.a { background: linear-gradient(160deg, #ff2e88, #9c0f50); box-shadow: 0 0 0 4px var(--shadow), 0 0 28px rgba(255,46,136,.55); }
-.gx-opt.b { background: linear-gradient(160deg, #19e3ff, #0a6f8a); color: #04131c; box-shadow: 0 0 0 4px var(--shadow), 0 0 28px rgba(25,227,255,.5); }
+.gx-opt.a { padding-bottom: 32px; background: linear-gradient(160deg, #ff2e88, #9c0f50); box-shadow: 0 0 0 4px var(--shadow), 0 0 28px rgba(255,46,136,.55); }
+.gx-opt.b { padding-top: 32px; background: linear-gradient(160deg, #19e3ff, #0a6f8a); color: #04131c; box-shadow: 0 0 0 4px var(--shadow), 0 0 28px rgba(25,227,255,.5); }
 .gx-opt.win { outline: 4px dashed var(--yellow); outline-offset: -10px; }
 .gx-or {
   align-self: center; margin: -22px 0; z-index: 2; padding: 10px 14px; font-family: var(--pixel); font-size: 14px;

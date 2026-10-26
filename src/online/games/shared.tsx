@@ -59,6 +59,7 @@ export function parseNumber(raw: string): number | null {
     s = s.split(thou).join('').replace(dec, '.');
   } else if (dots > 1) s = s.split('.').join('');
   else if (commas > 1) s = s.split(',').join('');
+  else if (dots === 1 && /^-?\d{1,3}\.\d{3}$/.test(s)) s = s.replace('.', ''); // "3.798" = Tausender (de-AT)
   else s = s.replace(',', '.');
   const n = Number(s);
   return Number.isFinite(n) ? n : null;

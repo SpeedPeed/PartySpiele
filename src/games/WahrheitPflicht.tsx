@@ -15,6 +15,7 @@ interface Shown {
   text: string;
   l: Level;
   secs: number | null;
+  penalty: number;
   viaZufall: boolean;
 }
 
@@ -55,7 +56,7 @@ export default function WahrheitPflicht() {
     const card = kind === 'wahrheit' ? drawTruth() : drawDare();
     if (!card || !current) return;
     const m = /(\d+)\s*Sekunden/.exec(card.t);
-    setShown({ kind, text: fill(card.t, current).text, l: card.l, secs: kind === 'pflicht' && m ? Number(m[1]) : null, viaZufall });
+    setShown({ kind, text: fill(card.t, current).text, l: card.l, secs: kind === 'pflicht' && m ? Number(m[1]) : null, viaZufall, penalty: Number(/\{s:(\d+)\}/.exec(card.t)?.[1] ?? 2) });
     setResult(null);
     timer.reset();
     setCounts((cs) => {
@@ -112,7 +113,7 @@ export default function WahrheitPflicht() {
     if (!current) return;
     timer.stop();
     addStat(current.id, 'refused');
-    addStat(current.id, 'sips', 2);
+    addStat(current.id, 'sips', shown?.penalty ?? 2);
     setResult('refused');
     setShake((x) => x + 1);
     sfx.fail();
@@ -224,7 +225,7 @@ export default function WahrheitPflicht() {
           {result === 'done' && <div className="gx-stamp ok">Leiwand, {current.name}! 💪</div>}
           {result === 'refused' && (
             <div className="gx-stamp bad">
-              Na servas! {current.name} nimmt {sips(2, drinkFor(current.noAlcohol))} 🍺
+              Na servas! {current.name} nimmt {sips(shown.penalty, drinkFor(current.noAlcohol))} 🍺
             </div>
           )}
           {result && (

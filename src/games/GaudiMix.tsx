@@ -4,6 +4,7 @@ import type { MixCard, MixType, Prompt } from '../data/types';
 import { useDeck, useFill, usePrompts } from '../lib/hooks';
 import { useStore, type Player } from '../lib/store';
 import { between, pick } from '../lib/random';
+import { sips } from '../lib/format';
 import { buzz, sfx } from '../lib/sound';
 import { Button, Confetti, PlayerChip, PromptCard, Rich, Seg } from '../components/ui';
 import './mixSpiele.css';
@@ -169,12 +170,12 @@ export default function GaudiMix() {
     sfx.success();
     setLogged({ ok: true, msg: `Leiwand, ${p.name}! ✔` });
   };
-  const logRefused = (p: Player) => {
+  const logRefused = (p: Player, pen: number) => {
     addStat(p.id, 'refused');
-    addStat(p.id, 'sips', 2);
+    addStat(p.id, 'sips', pen);
     sfx.fail();
     buzz([80, 40, 80]);
-    setLogged({ ok: false, msg: `Feigling! ${p.name} nimmt ${penaltyText(p, 2)}` });
+    setLogged({ ok: false, msg: `Feigling! ${p.name} nimmt ${penaltyText(p, pen)}` });
   };
   const logDuel = (w: Player, l: Player, pen: number) => {
     addStat(w.id, 'wins');
@@ -184,8 +185,7 @@ export default function GaudiMix() {
     setLogged({ ok: true, msg: `🏆 ${w.name} gewinnt – ${l.name} nimmt ${penaltyText(l, pen)}` });
   };
   function penaltyText(p: Player, k: number) {
-    const drink = settings.drinkMode && !p.noAlcohol;
-    return drink ? (k === 1 ? '1 Schluck' : `${k} Schlucke`) : k === 1 ? '1 Strafpunkt' : `${k} Strafpunkte`;
+    return sips(k, settings.drinkMode && !p.noAlcohol);
   }
 
   return (
@@ -249,7 +249,7 @@ export default function GaudiMix() {
           <Button color="green" onClick={() => logDone(shown.p!)} silent>
             Erledigt ✔
           </Button>
-          <Button color="red" onClick={() => logRefused(shown.p!)} silent>
+          <Button color="red" onClick={() => logRefused(shown.p!, shown.penalty)} silent>
             Gekniffen ✘
           </Button>
         </div>

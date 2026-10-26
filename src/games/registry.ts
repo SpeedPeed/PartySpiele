@@ -196,6 +196,7 @@ export const GAMES: GameMeta[] = [
       'Runde 1: Jede Person beantwortet 4 Fragen (Rot/Schwarz, Höher/Tiefer, Innerhalb/Außerhalb, Farbe). Falsch = trinken.',
       'Runde 2: Die Pyramide wird aufgedeckt. Wer eine passende Karte hat, verteilt Schlucke (Reihe = Anzahl).',
       'Runde 3: Wer am Ende die meisten Karten hat, muss Bus fahren: 5 Karten höher/tiefer am Stück richtig raten.',
+      'Bei der Busfahrt: falsch = so viele Schlucke wie die Haltestelle und von vorne mit neuen Karten. Gleich zählt als falsch.',
     ],
     component: lazy(() => import('./Busfahrer')),
   },
@@ -269,6 +270,7 @@ export const GAMES: GameMeta[] = [
       'Die App zeigt eine Kategorie. Nenne einen passenden Begriff und gib das Handy weiter.',
       'Der Timer ist geheim. Wer das Handy hält, wenn die Bombe hochgeht, trinkt.',
       'Wiederholungen oder Zögern gelten nicht!',
+      'Modus „Silbe“: Statt einer Kategorie kommt eine Silbe (z. B. „ER“) – nenne ein Wort, das sie enthält.',
     ],
     component: lazy(() => import('./Wortbombe')),
   },
@@ -293,7 +295,12 @@ export const GAMES: GameMeta[] = [
     tagline: 'Turnierbaum, Ergebnisse, Regeln',
     color: C.orange,
     minPlayers: 0,
-    rules: ['Teams anlegen, Turnier starten, Sieger eintragen.', 'Die App baut den Turnierbaum (inkl. Freilos).', 'Offizielle Gaudi-Regeln für Bierpong & Flunkyball im Spiel.'],
+    rules: [
+      'Teams anlegen (oder aus der Spielerliste in 2er-Teams auslosen) und Modus wählen: K.-o. oder Jeder gegen jeden.',
+      'Die App baut den Turnierbaum inkl. Freilosen. Spiel antippen → Sieger (und optional Becher-Differenz) eintragen.',
+      'Das Turnier bleibt gespeichert, auch wenn du die App schließt.',
+      'Ausführliche Gaudi-Regeln für Bierpong & Flunkyball findest du in den Tabs.',
+    ],
     component: lazy(() => import('./Turnier')),
   },
   {
@@ -318,7 +325,11 @@ export const GAMES: GameMeta[] = [
     tagline: 'Wisch und dreh',
     color: C.green,
     minPlayers: 0,
-    rules: ['Handy in die Mitte legen und die Flasche anwischen.', 'Worauf sie zeigt, die Person ist dran.'],
+    rules: [
+      'Handy in die Mitte legen und die Flasche anwischen (im Kreis ziehen & loslassen) – oder einfach den Knopf drücken.',
+      'Worauf der Flaschenhals zeigt, die Person ist dran.',
+      '„Mit Spielern“: Avatare sitzen im Kreis, die App zeigt an, wen es erwischt hat – direkt weiter zu Wahrheit oder Pflicht.',
+    ],
     component: lazy(() => import('../tools/Flaschendrehen')),
   },
   {
@@ -329,7 +340,10 @@ export const GAMES: GameMeta[] = [
     tagline: 'Strafen, Namen oder eigene Felder',
     color: C.pink,
     minPlayers: 0,
-    rules: ['Drehen und tun, was das Rad sagt.', 'Eigene Felder kannst du unter „Eigene Inhalte“ anlegen.'],
+    rules: [
+      'Vorlage wählen: Strafen, Spieler oder Eigene. Drehen und tun, was das Rad sagt.',
+      'Eigene Felder kannst du direkt im Rad oder unter „Eigene Inhalte“ anlegen ({s:2} wird zu Schlucken).',
+    ],
     component: lazy(() => import('../tools/Gluecksrad')),
   },
   {
@@ -340,7 +354,11 @@ export const GAMES: GameMeta[] = [
     tagline: 'Alle Finger aufs Display',
     color: C.cyan,
     minPlayers: 0,
-    rules: ['Alle legen einen Finger aufs Display.', 'Nach kurzer Zeit wählt die App zufällig einen Finger aus.'],
+    rules: [
+      'Alle legen einen Finger aufs Display und halten still.',
+      'Nach 2,5 Sekunden Ruhe startet der Countdown – dann wählt die App einen Gewinner, bildet Teams oder lost eine Reihenfolge aus.',
+      'Am PC: Klicken setzt Punkte zum Testen.',
+    ],
     component: lazy(() => import('../tools/Finger')),
   },
   {
@@ -351,7 +369,7 @@ export const GAMES: GameMeta[] = [
     tagline: 'Würfel, Trinkwürfel, Münzwurf',
     color: C.yellow,
     minPlayers: 0,
-    rules: ['Normaler Würfel, 2 Würfel, Trinkwürfel und Münze.', 'Schütteln zum Würfeln (falls dein Handy das erlaubt).'],
+    rules: ['1–6 normale Würfel, Trinkwürfel und Münzwurf mit Serien-Statistik.', 'Schütteln zum Würfeln (falls dein Handy das erlaubt – einmal aktivieren).'],
     component: lazy(() => import('../tools/Wuerfel')),
   },
   {
@@ -362,7 +380,11 @@ export const GAMES: GameMeta[] = [
     tagline: 'Stopp genau bei 10,00',
     color: C.purple,
     minPlayers: 0,
-    rules: ['Starten, im Kopf mitzählen, bei genau 10 Sekunden stoppen.', 'Wer am weitesten daneben liegt, trinkt die Differenz in Schlucken.'],
+    rules: [
+      'Starten, im Kopf mitzählen, bei genau 10 Sekunden stoppen. Nach 3 Sekunden wird die Uhr versteckt!',
+      'Wer am Ende am weitesten daneben liegt, trinkt die Abweichung in Schlucken (aufgerundet, max. 5).',
+      'Perfekt (±0,05 s) = darf 5 Schlucke verteilen.',
+    ],
     component: lazy(() => import('../tools/ZehnSekunden')),
   },
   {
@@ -373,7 +395,7 @@ export const GAMES: GameMeta[] = [
     tagline: 'Spieler, Teams & Reihenfolge',
     color: C.orange,
     minPlayers: 0,
-    rules: ['Zufällige Person wählen, Teams bilden oder eine Reihenfolge auslosen.'],
+    rules: ['Zufällige Person wählen, Teams bilden, eine Reihenfolge auslosen oder eine Zufallszahl ziehen.', 'Ohne Spielerliste: einfach die Anzahl der Leute einstellen.'],
     component: lazy(() => import('../tools/Zufall')),
   },
 ];
