@@ -140,9 +140,11 @@ function View({ state: s, me, isHost, players, send, fill }: OnlineViewProps<S, 
         <div style={{ fontSize: 22, lineHeight: 1.15 }}>{q.q}</div>
       </Panel>
       <div className="center muted small">Richtige Antwort</div>
-      <div className="big-num center" style={{ fontSize: 34 }}>
-        {fmtNum(q.a)}
-        <span style={{ fontSize: 16 }}>{unit}</span>
+      <div className="center">
+        <span className="big-num" style={{ fontSize: 34 }}>
+          {fmtNum(q.a)}
+        </span>
+        {unit && <span style={{ fontSize: 26, color: 'var(--yellow)' }}>{unit}</span>}
       </div>
       <div className="col" style={{ gap: 8 }}>
         {s.results.map((r, i) => {
