@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gaudi Games – Trailer (Komposition)</title>
+<style>
+  @font-face { font-family: 'PressStart'; src: url('fonts/PressStart2P-Regular.woff2') format('woff2'); }
+  @font-face { font-family: 'VT323'; src: url('fonts/VT323-Regular.woff2') format('woff2'); }
+  html, body { margin: 0; background: #000; }
+  /* 1080×1920 Pixel, 1:1 – render.js macht davon den Screenshot. */
+  canvas { display: block; width: 1080px; height: 1920px; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Komposition: jedes Bild ist eine reine Funktion der Zeit, window.seek(t).
+// Gezeichnet wird auf einem festen 270×480-Raster und nearest-neighbor ×4 hochskaliert.
+// Die Handy-Ausschnitte (echte App-Aufnahmen) liegen hochauflösend darüber.
+// Alle Zeiten in Schlägen (beats); bpm und Szenen stehen in timeline.json.
+
+const W = 1080, H = 1920, LW = 270, LH = 480;
+const out = document.getElementById('c');
+const octx = out.getContext('2d');
+const lo = document.createElement('canvas');
+lo.width = LW; lo.height = LH;
+const g = lo.getContext('2d');
+g.imageSmoothingEnabled = false;
+octx.imageSmoothingEnabled = false;
+
+// Palette aus der App (src/styles.css :root)
+const P = {
+  shadow: '#05020f', bg: '#0b0620', bg2: '#150a35', panel: '#1d0f4a', panel2: '#2a1666',
+  ink: '#f4f1ff', muted: '#a69ad6', pink: '#ff2e88', cyan: '#19e3ff', yellow: '#ffe03a',
+  green: '#3dff6e', orange: '#ff8a1f', red: '#ff3b3b', purple: '#a64dff', white: '#ffffff',
+};
+
+// Handy-Bildschirm im hochauflösenden Layer (Pixel-Wert = 1 px im 1080er-Bild)
+const PH = { x: 260, y: 560, w: 560, h: 1212 };
+
+// Pixel-Sprites: Zeichen → Farbe, '.' = leer
+const SPRITES = {
+  mug: {
+    map: { o: P.shadow, y: P.yellow, h: '#fff3a0', w: P.ink },
+    rows: [
+      '..wwww..',
+      '.wwwwww.',
+      'oyyyyyyo',
+      'oyhyyyyo',
+      'oyhyyyyo',
+      'oyyyyyyo',
+      'oyyyyyyo',
+      'oyyyyyyo',
+      'oyyyyyyo',
+      '.oooooo.',
+    ],
+  },
+  wolf: {
+    map: { o: P.shadow, G: P.muted, D: P.purple, L: P.ink, e: P.yellow, n: P.pink },
+    rows: [
+      'oo.........oo',
+      'oDo.......oDo',
+      'oDDo.....oDDo',
+      'oGDDooooooDGo',
+      'oGGGGGGGGGGGo',
+      'oGeeGGGGGeeGo',
+      'oGGGGGGGGGGGo',
+      'oGGLLLLLLLGGo',
+      'oGLLLLnLLLLGo',
+      'oGGLLLLLLLGGo',
+      '..ooooooooo..',
+    ],
+  },
+};
+
+let T = null;               // timeline.json
+const clips = {};           // Name -> { frames, taps, duration, imgs, title }
+let SCENES_LIST = [];
+window.SFX = [];
+
+// ---------- kleine Helfer ----------
+const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const beatOf = (t) => t * T.bpm / 60;
+const secOf = (beat) => beat * 60 / T.bpm;
+const pickSize = (v) => [8, 16, 24, 32, 40].reduce((a, s) => (Math.abs(s - v) < Math.abs(a - v) ? s : a));
+
+function txt(s, x, y, o = {}) {
+  const size = o.size ?? 8;
+  g.font = `${size}px ${o.face ?? 'PressStart'}`;
+  g.letterSpacing = `${o.ls ?? 0}px`;
+  g.textBaseline = 'top';
+  const w = g.measureText(s).width;
+  const x0 = Math.round(o.align === 'center' ? x - w / 2 : o.align === 'right' ? x - w : x);
+  const y0 = Math.round(y);
+  for (const sh of o.shadow ?? []) { g.fillStyle = sh.c; g.fillText(s, x0 + sh.dx, y0 + sh.dy); }
+  g.fillStyle = o.c ?? P.ink;
+  g.fillText(s, x0, y0);
+  g.letterSpacing = '0px';
+  return w;
+}
+
+function sprite(name, cx, cy, sx, sy) {
+  const sp = SPRITES[name];
+  const cols = sp.rows[0].length, rows = sp.rows.length;
+  const ox = cx - cols * sx / 2, oy = cy - rows * sy / 2;
+  sp.rows.forEach((row, r) => {
+    [...row].forEach((ch, c) => {
+      if (ch === '.') return;
+      const x1 = Math.round(ox + c * sx), x2 = Math.round(ox + (c + 1) * sx);
+      const y1 = Math.round(oy + r * sy), y2 = Math.round(oy + (r + 1) * sy);
+      g.fillStyle = sp.map[ch];
+      g.fillRect(x1, y1, Math.max(1, x2 - x1), Math.max(1, y2 - y1));
+    });
+  });
+}
+
+// Himmel in Bändern, Synthwave-Sonne mit Streifen, Boden-Gitter (scrollt im Takt)
+function world(b, horizon, sunY) {
+  const bands = [[0, P.shadow], [0.35, P.bg], [0.62, P.bg2], [0.85, P.panel], [1, P.panel2]];
+  for (let y = 0; y < horizon; y++) {
+    const k = y / horizon;
+    let col = P.shadow;
+    for (const [edge, c] of bands) if (k >= edge) col = c;
+    g.fillStyle = col;
+    g.fillRect(0, y, LW, 1);
+  }
+  for (let i = 0; i < 36; i++) {
+    const x = Math.floor(hash(i * 2.3) * LW), y = Math.floor(hash(i * 5.1 + 1) * (horizon - 8));
+    if (Math.sin(b * Math.PI + i * 1.7) < -0.3) continue;
+    g.fillStyle = i % 4 === 0 ? P.cyan : P.muted;
+    g.fillRect(x, y, 1, 1);
+  }
+  const R = 46, cx = LW / 2;
+  for (let r = -R; r <= R; r++) {
+    const yy = Math.round(sunY + r);
+    if (yy < 0 || yy >= horizon) continue;
+    if (yy > horizon - 16 && yy % 3 === 0) continue;
+    const half = Math.round(Math.sqrt(R * R - r * r));
+    const k = (r + R) / (2 * R);
+    g.fillStyle = k < 0.45 ? P.yellow : k < 0.75 ? P.orange : P.pink;
+    g.fillRect(cx - half, yy, half * 2, 1);
+  }
+  g.fillStyle = P.shadow;
+  g.fillRect(0, horizon, LW, LH - horizon);
+  const scroll = (b * 4) % 1;
+  for (let i = 0; i < 16; i++) {
+    const y = Math.round(horizon + Math.pow(i + scroll, 1.7) * 3.2);
+    if (y >= LH) break;
+    g.fillStyle = i < 2 ? P.pink : P.purple;
+    g.fillRect(0, y, LW, 1);
+  }
+  for (let j = -10; j <= 10; j++) {
+    g.fillStyle = P.purple;
+    for (let y = horizon + 1; y < LH; y++) {
+      const x = Math.round(cx + j * (y - horizon) * 0.55);
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+}
+
+// Partikel-Explosion: lp in Sekunden seit Start, Position in Raster-Pixeln
+function burst(cx, cy, lp, n, cols, grav = 160) {
+  if (lp <= 0 || lp > 1.3) return;
+  for (let i = 0; i < n; i++) {
+    const a = hash(i) * Math.PI * 2, sp = 40 + hash(i + 50) * 120;
+    const x = cx + Math.cos(a) * sp * lp, y = cy + Math.sin(a) * sp * lp + grav * lp * lp;
+    g.fillStyle = cols[i % cols.length];
+    g.fillRect(Math.round(x), Math.round(y), 2, 2);
+  }
+}
+
+// Konfetti-Regen, lb in Schlägen
+function confetti(lb, n, cols) {
+  for (let i = 0; i < n; i++) {
+    const x = Math.floor(hash(i * 7.7) * LW + Math.sin(lb * 2 + i) * 6);
+    const y = Math.floor(hash(i * 3.3) * LH + lb * 60 * (0.6 + hash(i) * 0.8)) % LH;
+    g.fillStyle = cols[i % cols.length];
+    g.fillRect(x, y, 2, 2);
+  }
+}
+
+// Pixel-Wipe: Zellen werden nacheinander aufgedeckt (lb in Schlägen seit Szenenstart)
+function wipe(lb) {
+  const p = clamp(lb / 0.5);
+  if (p >= 1) return;
+  const cs = 15;
+  for (let cy = 0; cy < LH / cs; cy++) {
+    for (let cx = 0; cx < LW / cs; cx++) {
+      if (hash(cx * 13.1 + cy * 7.7) < p) continue;
+      g.fillStyle = P.shadow;
+      g.fillRect(cx * cs, cy * cs, cs, cs);
+    }
+  }
+}
+
+function frameAt(clip, c) {
+  let idx = 0;
+  for (let i = 0; i < clip.frames.length; i++) { if (clip.frames[i].t <= c) idx = i; else break; }
+  return clip.imgs[idx];
+}
+
+// Handy-Ausschnitt im hochauflösenden Layer, mit Tipp-Ripple aus clip.json
+function drawPhone(name, c) {
+  const clip = clips[name];
+  if (!clip) return;
+  const p = clamp(c / 0.25);
+  octx.save();
+  octx.beginPath();
+  octx.rect(PH.x - 40, PH.y - 40, PH.w + 80, (PH.h + 80) * p);
+  octx.clip();
+  const box = (x, y, w, h, col) => { octx.fillStyle = col; octx.fillRect(x, y, w, h); };
+  box(PH.x - 28, PH.y - 28, PH.w + 56, PH.h + 56, P.shadow);
+  box(PH.x - 20, PH.y - 20, PH.w + 40, PH.h + 40, P.panel2);
+  box(PH.x - 12, PH.y - 12, PH.w + 24, PH.h + 24, P.cyan);
+  box(PH.x - 8, PH.y - 8, PH.w + 16, PH.h + 16, P.shadow);
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'high';
+  octx.drawImage(frameAt(clip, c), PH.x, PH.y, PH.w, PH.h);
+  octx.imageSmoothingEnabled = false;
+  for (const tap of clip.taps) {
+    const dt = c - tap.t;
+    if (dt < 0 || dt > 0.5) continue;
+    const r = 8 + easeOut(dt / 0.5) * 70;
+    const sx = PH.x + tap.x * (PH.w / clip.phone.width);
+    const sy = PH.y + tap.y * (PH.h / clip.phone.height);
+    octx.globalAlpha = 1 - dt / 0.5;
+    for (let a = 0; a < Math.PI * 2; a += 0.22) {
+      octx.fillStyle = P.cyan;
+      octx.fillRect(Math.round(sx + Math.cos(a) * r), Math.round(sy + Math.sin(a) * r), 8, 8);
+    }
+    octx.globalAlpha = 1;
+  }
+  octx.restore();
+}
+
+// Titel für Clip-Szenen: zwei Zeilen oben, im sicheren Bereich
+function clipTitle(name, lb) {
+  const t = clips[name].title;
+  const slide = (1 - easeOutBack(clamp(lb / 0.5))) * -30;
+  txt(t[0], 135, 40 + slide, { size: 16, align: 'center', c: P.pink, shadow: [{ dx: 1, dy: 1, c: P.shadow }] });
+  txt(t[1], 135, 66 + slide, { size: 16, align: 'center', c: P.yellow, shadow: [{ dx: 1, dy: 1, c: P.shadow }] });
+}
+
+function logo(cy, pop, gx = 0) {
+  if (pop < 0.05) return;
+  txt('GAUDI', 135, cy, {
+    size: pickSize(32 * pop), align: 'center', c: P.yellow,
+    shadow: [{ dx: 1, dy: 1, c: P.pink }, { dx: 2, dy: 2, c: P.shadow }],
+  });
+  txt('GAMES', 135 + gx, cy + 40, {
+    size: 16, ls: 6, align: 'center', c: P.cyan,
+    shadow: [{ dx: 1, dy: 1, c: P.purple }, { dx: 2, dy: 2, c: P.shadow }],
+  });
+}
+
+// ---------- Szenen ----------
+const SCENE = {
+  // 0–2 s: Hook. Text tippt sich hin, Mug springt rein, Glitch vor dem Drop.
+  hook(lb, b) {
+    const l1 = 'INSERT BEER', l2 = 'TO START';
+    const n1 = Math.min(l1.length, Math.floor(lb * 9));
+    const n2 = Math.min(l2.length, Math.max(0, Math.floor((lb - 1.4) * 9)));
+    const glitch = clamp((lb - 3) / 1) * (hash(Math.floor(b * 8)) - 0.5) * 8;
+    txt(l1.slice(0, n1), 135 - measureW(l1, 16) / 2 + glitch, 150, { size: 16, c: P.yellow, shadow: [{ dx: 1, dy: 1, c: P.pink }] });
+    txt(l2.slice(0, n2), 135 - measureW(l2, 16) / 2 - glitch, 186, { size: 16, c: P.cyan, shadow: [{ dx: 1, dy: 1, c: P.purple }] });
+    if (lb > 1.2) {
+      const pop = easeOutBack(clamp((lb - 1.2) / 0.4));
+      const bob = -Math.abs(Math.sin(b * Math.PI)) * 4;
+      sprite('mug', 135, 300 + bob, 6 * pop, 6 * pop);
+    }
+  },
+
+  // 4–8 s: Drop. Weißer Blitz, Sonne steigt, Logo poppt mit Overshoot, Partikel.
+  drop(lb, b) {
+    const sunY = 230 + (1 - easeOut(clamp(lb / 3))) * 140;
+    world(b, 300, sunY);
+    burst(135, 110, lb * 0.5, 40, [P.pink, P.cyan, P.yellow, P.green, P.orange]);
+    logo(70, easeOutBack(clamp(lb / 0.5)), (1 - easeOut(clamp((lb - 0.5) / 0.5))) * 200);
+    if (lb < 0.12) { g.fillStyle = P.ink; g.fillRect(0, 0, LW, LH); }
+  },
+
+  // 8–12 s: Spielmoment 1. Karten fliegen rein, eine dreht sich und zeigt VIRUS.
+  mix(lb, b) {
+    world(b, 300, 230);
+    const slide = (1 - easeOut(clamp(lb / 0.5))) * -40;
+    txt('GAUDI-MIX', 135, 40 + slide, { size: 16, align: 'center', c: P.yellow, shadow: [{ dx: 1, dy: 1, c: P.pink }] });
+    txt('KARTEN · VIREN · DUELLE', 135, 72, { size: 8, align: 'center', c: P.cyan });
+    const cards = [['AUFGABE', P.pink, 'A'], ['VIRUS', P.green, 'V'], ['DUELL', P.orange, 'D'], ['REGEL', P.yellow, 'R']];
+    cards.forEach(([label, col, letter], i) => {
+      const e = easeOutBack(clamp((lb - 0.1 * i) / 0.6));
+      const xt = 135 + (i - 1.5) * 62, xs = i % 2 ? -60 : 330;
+      const x = xs + (xt - xs) * e;
+      let sc = 1, face = true;
+      if (i === 1) { sc = Math.abs(Math.cos(Math.PI * clamp((lb - 2) / 0.6))); face = lb > 2.3; }
+      const w = Math.max(2, Math.round(60 * sc));
+      const x0 = Math.round(x - w / 2), y0 = 200;
+      g.fillStyle = face ? P.panel : P.purple;
+      g.fillRect(x0, y0, w, 120);
+      g.fillStyle = col;
+      g.fillRect(x0, y0, w, 3); g.fillRect(x0, y0 + 117, w, 3);
+      g.fillRect(x0, y0, 3, 120); g.fillRect(x0 + w - 3, y0, 3, 120);
+      if (face && w > 30) {
+        txt(label, x, y0 + 14, { size: 8, align: 'center', c: col });
+        txt(letter, x, y0 + 50, { size: 32, align: 'center', c: col, shadow: [{ dx: 1, dy: 1, c: P.shadow }] });
+      }
+    });
+  },
+
+  // 12–18 s, 22–28 s, 32–38 s: echte App-Ausschnitte im Handy-Rahmen.
+  clip(lb, b, sc) {
+    world(b, 300, 230);
+    clipTitle(sc.clip, lb);
+  },
+
+  // 18–22 s: Werwolf. Wolf heult im Takt, Text steigt auf.
+  wolf(lb, b) {
+    world(b, 300, 150);
+    txt('WERWOLF', 135, 40, { size: 16, align: 'center', c: P.cyan, shadow: [{ dx: 1, dy: 1, c: P.purple }] });
+    txt('DIE APP IST DER ERZÄHLER', 135, 72, { size: 8, align: 'center', c: P.ink });
+    const howl = easeOutBack(clamp(lb / 0.4));
+    sprite('wolf', 135, 150 - Math.abs(Math.sin(b * Math.PI)) * 4, 9 * howl, 9 * howl);
+    const up = (lb * 12) % 40;
+    txt('AUUUU!', 135, 220 - up, { size: 8, align: 'center', c: P.pink });
+  },
+
+  // 28–32 s: Bus fährt durchs Bild, Räder drehen sich.
+  bus(lb, b) {
+    world(b, 300, 230);
+    txt('BUSFAHRER', 135, 40, { size: 16, align: 'center', c: P.orange, shadow: [{ dx: 1, dy: 1, c: P.shadow }] });
+    txt('PYRAMIDE & BUS', 135, 72, { size: 8, align: 'center', c: P.cyan });
+    const x = Math.round(-80 + (290 + 80) * easeOut(clamp(lb / 3.5)));
+    const y = 220;
+    g.fillStyle = P.shadow; g.fillRect(x - 1, y - 1, 66, 38);
+    g.fillStyle = P.orange; g.fillRect(x, y, 64, 30);
+    g.fillStyle = P.red; g.fillRect(x, y + 22, 64, 4);
+    g.fillStyle = P.cyan;
+    for (let i = 0; i < 4; i++) g.fillRect(x + 6 + i * 13, y + 5, 9, 8);
+    g.fillStyle = P.pink; g.fillRect(x + 56, y + 14, 6, 12);
+    const spin = Math.floor(lb * 16) % 4;
+    for (const wx of [x + 12, x + 50]) {
+      g.fillStyle = P.shadow; g.fillRect(wx - 5, y + 28, 11, 11);
+      g.fillStyle = P.muted; g.fillRect(wx - 3, y + 30, 7, 7);
+      g.fillStyle = P.shadow; g.fillRect(wx - (spin % 2 ? 1 : 0), y + 31, spin % 2 ? 2 : 1, 5);
+    }
+  },
+
+  // 38–48 s: Finale. Logo, Slogan, Mitmach-Button, Link, Credit und Verantwortungs-Hinweis.
+  finale(lb, b) {
+    world(b, 340, 300);
+    confetti(lb, 50, [P.pink, P.cyan, P.yellow, P.green, P.orange, P.purple]);
+    const wob = Math.sin(b * Math.PI) * 2;
+    logo(40 + wob, easeOutBack(clamp(lb / 0.5)));
+    // Panel hinter den Texten, damit Slogan und Link über der Sonne lesbar bleiben
+    if (lb > 1.5) {
+      const p = easeOutBack(clamp((lb - 1.5) / 0.5));
+      const pw = Math.round(220 * p), ph = Math.round(150 * p);
+      g.fillStyle = P.cyan; g.fillRect(135 - pw / 2 - 2, 209 - ph / 2 - 2, pw + 4, ph + 4);
+      g.fillStyle = P.shadow; g.fillRect(135 - pw / 2, 209 - ph / 2, pw, ph);
+    }
+    if (lb > 2.2) {
+      txt('EINE RUNDE', 135, 146, { size: 16, align: 'center', c: P.white, shadow: [{ dx: 1, dy: 1, c: P.pink }] });
+      txt('GAUDI?', 135, 170, { size: 16, align: 'center', c: P.yellow, shadow: [{ dx: 1, dy: 1, c: P.pink }] });
+    }
+    if (lb > 4 && Math.floor(b * 2) % 2 === 0) txt('JETZT SPIELEN ▶', 135, 206, { size: 8, align: 'center', c: P.green });
+    if (lb > 5) {
+      const [host, path] = T.link.split('/');
+      txt(host, 135, 236, { size: 8, align: 'center', c: P.cyan });
+      txt('/' + path, 135, 248, { size: 8, align: 'center', c: P.cyan });
+    }
+    txt('BITTE TRINKT VERANTWORTUNGSVOLL', 135, 372, { size: 8, align: 'center', c: P.muted });
+    if (lb > 6) txt(T.music.credit, 135, 392, { size: 16, align: 'center', c: P.muted, face: 'VT323' });
+    if (lb > 9.5) { g.globalAlpha = clamp((lb - 9.5) / 0.5); g.fillStyle = P.shadow; g.fillRect(0, 0, LW, LH); g.globalAlpha = 1; }
+  },
+};
+
+// Textbreite, ohne Zeichnen (für zentrierte Teil-Strings)
+function measureW(s, size) {
+  g.font = `${size}px PressStart`;
+  return g.measureText(s).width;
+}
+
+function shake(b) {
+  const d = b - 4;
+  if (d < 0 || d > 1.2) return { x: 0, y: 0 };
+  const a = 5 * Math.exp(-d * 4);
+  return { x: Math.sin(b * 73) * a, y: Math.cos(b * 59) * a };
+}
+
+function sceneAt(b) {
+  return SCENES_LIST.find((s) => b >= s.from && b < s.to) || SCENES_LIST[SCENES_LIST.length - 1];
+}
+
+function seek(t) {
+  const b = beatOf(t);
+  const sc = sceneAt(b);
+  const lb = b - sc.from;
+  const lt = secOf(lb);
+  const sh = shake(b);
+
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = P.shadow;
+  g.fillRect(0, 0, LW, LH);
+  g.setTransform(1, 0, 0, 1, Math.round(sh.x), Math.round(sh.y));
+  const id = sc.id;
+  SCENE[id](lb, b, sc);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  if (id !== 'hook' && id !== 'drop' && lb < 0.5) wipe(lb);
+
+  octx.setTransform(1, 0, 0, 1, 0, 0);
+  octx.imageSmoothingEnabled = false;
+  octx.fillStyle = P.shadow;
+  octx.fillRect(0, 0, W, H);
+  octx.drawImage(lo, 0, 0, W, H);
+  if (id === 'clip') drawPhone(sc.clip, lt);
+}
+window.seek = seek;
+
+// SFX-Fahrplan für audio.py: Zeiten in Sekunden, aus denselben Schlägen wie das Bild
+function buildSfx() {
+  const S = [];
+  const add = (beat, kind, extra = {}) => S.push({ t: +secOf(beat).toFixed(4), kind, ...extra });
+  for (let k = 1; k <= 11; k++) add(k / 9, 'blip');
+  for (let k = 1; k <= 8; k++) add(1.4 + k / 9, 'blip');
+  add(1.2, 'jump');
+  add(3, 'riser', { dur: secOf(1) });
+  add(4, 'impact');
+  add(4, 'coin');
+  add(8, 'whoosh');
+  for (let i = 0; i < 4; i++) add(8.3 + i * 0.15, 'blip');
+  add(10.3, 'coin');
+  for (const sc of SCENES_LIST) {
+    if (sc.id === 'clip') {
+      add(sc.from, 'whoosh');
+      for (const tap of clips[sc.clip].taps) add(sc.from + beatOf(tap.t), 'click');
+    }
+  }
+  add(18, 'whoosh'); add(19, 'powerup'); add(20, 'blip');
+  add(28, 'whoosh'); add(28.5, 'blip'); add(29.5, 'blip'); add(30.5, 'blip');
+  add(38, 'impact'); add(38, 'whoosh'); add(40, 'powerup'); add(40.2, 'coin');
+  add(42, 'blip'); add(42.5, 'blip'); add(44, 'coin'); add(46, 'powerup');
+  window.SFX = S.sort((a, b) => a.t - b.t);
+}
+
+const loadImg = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+
+async function init() {
+  T = await (await fetch('timeline.json')).json();
+  SCENES_LIST = T.scenes;
+  await Promise.all([document.fonts.load('16px PressStart'), document.fonts.load('16px VT323')]);
+  for (const [name, c] of Object.entries(T.clips)) {
+    const meta = await (await fetch(`clips/${c.file}/clip.json`)).json();
+    const imgs = await Promise.all(meta.frames.map((f) => loadImg(`clips/${c.file}/${f.file}`)));
+    clips[name] = { ...meta, imgs, title: c.title };
+  }
+  buildSfx();
+  seek(0);
+}
+window.ready = init();
+</script>
+</body>
+</html>

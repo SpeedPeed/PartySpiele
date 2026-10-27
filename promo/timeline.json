@@ -1,0 +1,29 @@
+{
+  "_comment": "Alle Animationszeiten in Schlägen (beats). 1 Schlag = 60/bpm Sekunden. Szenen: from/to in Schlägen.",
+  "bpm": 120,
+  "fps": 60,
+  "beats": 48,
+  "link": "speedpeed.github.io/partyspiele",
+  "music": {
+    "file": "music/level-3-cut.mp3",
+    "startSec": 0,
+    "dropBeat": 4,
+    "credit": "Musik: „Level 3“ by HoliznaCC0 · CC0 1.0"
+  },
+  "clips": {
+    "gaudi-virus": { "file": "gaudi-virus", "title": ["DAS VIRUS", "BLEIBT AKTIV!"] },
+    "werwolf-lobby": { "file": "werwolf-lobby", "title": ["1 RAUM.", "5 HANDYS."] },
+    "busfahrer": { "file": "busfahrer", "title": ["ROT ODER", "SCHWARZ?"] }
+  },
+  "scenes": [
+    { "id": "hook", "from": 0, "to": 4 },
+    { "id": "drop", "from": 4, "to": 8 },
+    { "id": "mix", "from": 8, "to": 12 },
+    { "id": "clip", "from": 12, "to": 18, "clip": "gaudi-virus" },
+    { "id": "wolf", "from": 18, "to": 22 },
+    { "id": "clip", "from": 22, "to": 28, "clip": "werwolf-lobby" },
+    { "id": "bus", "from": 28, "to": 32 },
+    { "id": "clip", "from": 32, "to": 38, "clip": "busfahrer" },
+    { "id": "finale", "from": 38, "to": 48 }
+  ]
+}

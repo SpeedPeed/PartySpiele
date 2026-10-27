@@ -3,3 +3,7 @@ dist
 *.tsbuildinfo
 .env
 .env.local
+
+# Promo-Trailer: Aufnahmen und Ausgabe sind Arbeitsdaten
+promo/clips/
+promo/out/
